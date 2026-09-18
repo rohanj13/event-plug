@@ -1,3 +1,5 @@
+using EventPlug.Api.Data;
+using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +11,13 @@ builder.Services.AddCors(options =>
         policy.WithOrigins("http://localhost:5173")
             .AllowAnyHeader()
             .AllowAnyMethod());
+});
+
+builder.Services.AddDbContext<EventPlugDbContext>(options =>
+{
+    options
+        .UseNpgsql(builder.Configuration.GetConnectionString("Postgres"))
+        .UseSnakeCaseNamingConvention();
 });
 
 var app = builder.Build();
