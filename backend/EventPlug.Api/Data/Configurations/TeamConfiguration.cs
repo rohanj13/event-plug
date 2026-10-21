@@ -10,6 +10,7 @@ public class TeamConfiguration : IEntityTypeConfiguration<Team>
     {
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
+        builder.HasAlternateKey(x => new { x.OrgId, x.Id });
 
         builder.Property(x => x.Name).HasMaxLength(200).IsRequired();
         builder.Property(x => x.CreatedAt).IsRequired();

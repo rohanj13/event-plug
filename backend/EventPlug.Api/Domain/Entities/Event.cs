@@ -2,7 +2,7 @@ using EventPlug.Api.Domain.Enums;
 
 namespace EventPlug.Api.Domain.Entities;
 
-public class Event
+public class Event : ITenantScoped
 {
     public Guid Id { get; set; }
     public Guid OrgId { get; set; }

@@ -2,9 +2,10 @@ using System.Text.Json;
 
 namespace EventPlug.Api.Domain.Entities;
 
-public class AIStructuringDraft
+public class AIStructuringDraft : ITenantScoped
 {
     public Guid Id { get; set; }
+    public Guid OrgId { get; set; }
     public Guid? EventId { get; set; }
     public string RawInputText { get; set; } = string.Empty;
     public JsonDocument StructuredOutput { get; set; } = null!;
@@ -12,6 +13,7 @@ public class AIStructuringDraft
     public DateTimeOffset CreatedAt { get; set; }
     public bool Accepted { get; set; }
 
+    public Organization Organization { get; set; } = null!;
     public Event? Event { get; set; }
     public User CreatedByUser { get; set; } = null!;
 }

@@ -15,14 +15,21 @@ public class RunSheetItemConfiguration : IEntityTypeConfiguration<RunSheetItem>
         builder.Property(x => x.Title).HasMaxLength(250).IsRequired();
         builder.Property(x => x.Description).HasMaxLength(4000);
 
+        builder.HasOne(x => x.Organization)
+            .WithMany()
+            .HasForeignKey(x => x.OrgId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasOne(x => x.Event)
             .WithMany(x => x.RunSheetItems)
-            .HasForeignKey(x => x.EventId)
+            .HasForeignKey(x => new { x.OrgId, x.EventId })
+            .HasPrincipalKey(x => new { x.OrgId, x.Id })
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(x => x.OwnerUser)
             .WithMany(x => x.RunSheetItems)
-            .HasForeignKey(x => x.OwnerUserId)
+            .HasForeignKey(x => new { x.OrgId, x.OwnerUserId })
+            .HasPrincipalKey(x => new { x.OrgId, x.Id })
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

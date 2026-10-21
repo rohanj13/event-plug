@@ -13,7 +13,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EventPlug.Api.Data.Migrations
 {
     [DbContext(typeof(EventPlugDbContext))]
-    [Migration("20260918112631_InitialCreate")]
+    [Migration("20261021123748_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -50,6 +50,10 @@ namespace EventPlug.Api.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("event_id");
 
+                    b.Property<Guid>("OrgId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("org_id");
+
                     b.Property<string>("RawInputText")
                         .IsRequired()
                         .HasColumnType("text")
@@ -63,11 +67,11 @@ namespace EventPlug.Api.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_ai_structuring_drafts");
 
-                    b.HasIndex("CreatedBy")
-                        .HasDatabaseName("ix_ai_structuring_drafts_created_by");
+                    b.HasIndex("OrgId", "CreatedBy")
+                        .HasDatabaseName("ix_ai_structuring_drafts_org_id_created_by");
 
-                    b.HasIndex("EventId")
-                        .HasDatabaseName("ix_ai_structuring_drafts_event_id");
+                    b.HasIndex("OrgId", "EventId")
+                        .HasDatabaseName("ix_ai_structuring_drafts_org_id_event_id");
 
                     b.ToTable("ai_structuring_drafts", (string)null);
                 });
@@ -92,6 +96,10 @@ namespace EventPlug.Api.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("expense_id");
 
+                    b.Property<Guid>("OrgId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("org_id");
+
                     b.Property<Guid>("RequestedBy")
                         .HasColumnType("uuid")
                         .HasColumnName("requested_by");
@@ -109,17 +117,20 @@ namespace EventPlug.Api.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_approvals");
 
-                    b.HasIndex("ApproverId")
-                        .HasDatabaseName("ix_approvals_approver_id");
+                    b.HasAlternateKey("OrgId", "Id")
+                        .HasName("ak_approvals_org_id_id");
 
-                    b.HasIndex("ExpenseId")
-                        .HasDatabaseName("ix_approvals_expense_id");
+                    b.HasIndex("OrgId", "ApproverId")
+                        .HasDatabaseName("ix_approvals_org_id_approver_id");
 
-                    b.HasIndex("RequestedBy")
-                        .HasDatabaseName("ix_approvals_requested_by");
+                    b.HasIndex("OrgId", "ExpenseId")
+                        .HasDatabaseName("ix_approvals_org_id_expense_id");
 
-                    b.HasIndex("TeamId")
-                        .HasDatabaseName("ix_approvals_team_id");
+                    b.HasIndex("OrgId", "RequestedBy")
+                        .HasDatabaseName("ix_approvals_org_id_requested_by");
+
+                    b.HasIndex("OrgId", "TeamId")
+                        .HasDatabaseName("ix_approvals_org_id_team_id");
 
                     b.ToTable("approvals", (string)null);
                 });
@@ -151,6 +162,10 @@ namespace EventPlug.Api.Data.Migrations
                         .HasColumnType("character varying(2000)")
                         .HasColumnName("comment");
 
+                    b.Property<Guid>("OrgId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("org_id");
+
                     b.Property<DateTimeOffset>("Timestamp")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("timestamp");
@@ -158,11 +173,11 @@ namespace EventPlug.Api.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_approval_audit_entries");
 
-                    b.HasIndex("ActorId")
-                        .HasDatabaseName("ix_approval_audit_entries_actor_id");
+                    b.HasIndex("OrgId", "ActorId")
+                        .HasDatabaseName("ix_approval_audit_entries_org_id_actor_id");
 
-                    b.HasIndex("ApprovalId")
-                        .HasDatabaseName("ix_approval_audit_entries_approval_id");
+                    b.HasIndex("OrgId", "ApprovalId")
+                        .HasDatabaseName("ix_approval_audit_entries_org_id_approval_id");
 
                     b.ToTable("approval_audit_entries", (string)null);
                 });
@@ -196,11 +211,18 @@ namespace EventPlug.Api.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("event_id");
 
+                    b.Property<Guid>("OrgId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("org_id");
+
                     b.HasKey("Id")
                         .HasName("pk_budget_categories");
 
-                    b.HasIndex("EventId")
-                        .HasDatabaseName("ix_budget_categories_event_id");
+                    b.HasAlternateKey("OrgId", "Id")
+                        .HasName("ak_budget_categories_org_id_id");
+
+                    b.HasIndex("OrgId", "EventId")
+                        .HasDatabaseName("ix_budget_categories_org_id_event_id");
 
                     b.ToTable("budget_categories", (string)null);
                 });
@@ -267,11 +289,11 @@ namespace EventPlug.Api.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_events");
 
+                    b.HasAlternateKey("OrgId", "Id")
+                        .HasName("ak_events_org_id_id");
+
                     b.HasIndex("CreatedBy")
                         .HasDatabaseName("ix_events_created_by");
-
-                    b.HasIndex("OrgId")
-                        .HasDatabaseName("ix_events_org_id");
 
                     b.ToTable("events", (string)null);
                 });
@@ -296,6 +318,10 @@ namespace EventPlug.Api.Data.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_owning_team");
 
+                    b.Property<Guid>("OrgId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("org_id");
+
                     b.Property<string>("SplitMethod")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -314,15 +340,18 @@ namespace EventPlug.Api.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_event_teams");
 
-                    b.HasIndex("ApproverUserId")
-                        .HasDatabaseName("ix_event_teams_approver_user_id");
-
-                    b.HasIndex("TeamId")
-                        .HasDatabaseName("ix_event_teams_team_id");
-
                     b.HasIndex("EventId", "TeamId")
                         .IsUnique()
                         .HasDatabaseName("ix_event_teams_event_id_team_id");
+
+                    b.HasIndex("OrgId", "ApproverUserId")
+                        .HasDatabaseName("ix_event_teams_org_id_approver_user_id");
+
+                    b.HasIndex("OrgId", "EventId")
+                        .HasDatabaseName("ix_event_teams_org_id_event_id");
+
+                    b.HasIndex("OrgId", "TeamId")
+                        .HasDatabaseName("ix_event_teams_org_id_team_id");
 
                     b.ToTable("event_teams", (string)null);
                 });
@@ -358,6 +387,10 @@ namespace EventPlug.Api.Data.Migrations
                         .HasColumnType("character varying(500)")
                         .HasColumnName("description");
 
+                    b.Property<Guid>("OrgId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("org_id");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -371,14 +404,17 @@ namespace EventPlug.Api.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_expenses");
 
-                    b.HasIndex("BudgetCategoryId")
-                        .HasDatabaseName("ix_expenses_budget_category_id");
+                    b.HasAlternateKey("OrgId", "Id")
+                        .HasName("ak_expenses_org_id_id");
 
-                    b.HasIndex("CreatedBy")
-                        .HasDatabaseName("ix_expenses_created_by");
+                    b.HasIndex("OrgId", "BudgetCategoryId")
+                        .HasDatabaseName("ix_expenses_org_id_budget_category_id");
 
-                    b.HasIndex("VendorId")
-                        .HasDatabaseName("ix_expenses_vendor_id");
+                    b.HasIndex("OrgId", "CreatedBy")
+                        .HasDatabaseName("ix_expenses_org_id_created_by");
+
+                    b.HasIndex("OrgId", "VendorId")
+                        .HasDatabaseName("ix_expenses_org_id_vendor_id");
 
                     b.ToTable("expenses", (string)null);
                 });
@@ -395,6 +431,10 @@ namespace EventPlug.Api.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("expense_id");
 
+                    b.Property<Guid>("OrgId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("org_id");
+
                     b.Property<decimal>("PortionAmount")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)")
@@ -407,11 +447,11 @@ namespace EventPlug.Api.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_expense_team_splits");
 
-                    b.HasIndex("ExpenseId")
-                        .HasDatabaseName("ix_expense_team_splits_expense_id");
+                    b.HasIndex("OrgId", "ExpenseId")
+                        .HasDatabaseName("ix_expense_team_splits_org_id_expense_id");
 
-                    b.HasIndex("TeamId")
-                        .HasDatabaseName("ix_expense_team_splits_team_id");
+                    b.HasIndex("OrgId", "TeamId")
+                        .HasDatabaseName("ix_expense_team_splits_org_id_team_id");
 
                     b.ToTable("expense_team_splits", (string)null);
                 });
@@ -450,6 +490,10 @@ namespace EventPlug.Api.Data.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("name");
 
+                    b.Property<Guid>("OrgId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("org_id");
+
                     b.Property<string>("RsvpStatus")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -459,8 +503,8 @@ namespace EventPlug.Api.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_guests");
 
-                    b.HasIndex("EventId")
-                        .HasDatabaseName("ix_guests_event_id");
+                    b.HasIndex("OrgId", "EventId")
+                        .HasDatabaseName("ix_guests_org_id_event_id");
 
                     b.ToTable("guests", (string)null);
                 });
@@ -512,6 +556,10 @@ namespace EventPlug.Api.Data.Migrations
                         .HasColumnType("jsonb")
                         .HasColumnName("brief_snapshot");
 
+                    b.Property<Guid>("OrgId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("org_id");
+
                     b.Property<DateTimeOffset>("SentAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("sent_at");
@@ -535,8 +583,8 @@ namespace EventPlug.Api.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_quote_requests");
 
-                    b.HasIndex("VendorEventLinkId")
-                        .HasDatabaseName("ix_quote_requests_vendor_event_link_id");
+                    b.HasIndex("OrgId", "VendorEventLinkId")
+                        .HasDatabaseName("ix_quote_requests_org_id_vendor_event_link_id");
 
                     b.ToTable("quote_requests", (string)null);
                 });
@@ -558,6 +606,10 @@ namespace EventPlug.Api.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("event_id");
 
+                    b.Property<Guid>("OrgId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("org_id");
+
                     b.Property<Guid?>("OwnerUserId")
                         .HasColumnType("uuid")
                         .HasColumnName("owner_user_id");
@@ -575,11 +627,11 @@ namespace EventPlug.Api.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_run_sheet_items");
 
-                    b.HasIndex("EventId")
-                        .HasDatabaseName("ix_run_sheet_items_event_id");
+                    b.HasIndex("OrgId", "EventId")
+                        .HasDatabaseName("ix_run_sheet_items_org_id_event_id");
 
-                    b.HasIndex("OwnerUserId")
-                        .HasDatabaseName("ix_run_sheet_items_owner_user_id");
+                    b.HasIndex("OrgId", "OwnerUserId")
+                        .HasDatabaseName("ix_run_sheet_items_org_id_owner_user_id");
 
                     b.ToTable("run_sheet_items", (string)null);
                 });
@@ -609,8 +661,8 @@ namespace EventPlug.Api.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_teams");
 
-                    b.HasIndex("OrgId")
-                        .HasDatabaseName("ix_teams_org_id");
+                    b.HasAlternateKey("OrgId", "Id")
+                        .HasName("ak_teams_org_id_id");
 
                     b.ToTable("teams", (string)null);
                 });
@@ -622,6 +674,10 @@ namespace EventPlug.Api.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id")
                         .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<Guid>("OrgId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("org_id");
 
                     b.Property<Guid>("TeamId")
                         .HasColumnType("uuid")
@@ -640,8 +696,11 @@ namespace EventPlug.Api.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_team_memberships");
 
-                    b.HasIndex("TeamId")
-                        .HasDatabaseName("ix_team_memberships_team_id");
+                    b.HasIndex("OrgId", "TeamId")
+                        .HasDatabaseName("ix_team_memberships_org_id_team_id");
+
+                    b.HasIndex("OrgId", "UserId")
+                        .HasDatabaseName("ix_team_memberships_org_id_user_id");
 
                     b.HasIndex("UserId", "TeamId")
                         .IsUnique()
@@ -657,6 +716,12 @@ namespace EventPlug.Api.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id")
                         .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("Auth0Subject")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("auth0_subject");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -682,6 +747,13 @@ namespace EventPlug.Api.Data.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_users");
+
+                    b.HasAlternateKey("OrgId", "Id")
+                        .HasName("ak_users_org_id_id");
+
+                    b.HasIndex("OrgId", "Auth0Subject")
+                        .IsUnique()
+                        .HasDatabaseName("ix_users_org_id_auth0_subject");
 
                     b.HasIndex("OrgId", "Email")
                         .IsUnique()
@@ -732,8 +804,8 @@ namespace EventPlug.Api.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_vendors");
 
-                    b.HasIndex("OrgId")
-                        .HasDatabaseName("ix_vendors_org_id");
+                    b.HasAlternateKey("OrgId", "Id")
+                        .HasName("ak_vendors_org_id_id");
 
                     b.ToTable("vendors", (string)null);
                 });
@@ -750,6 +822,10 @@ namespace EventPlug.Api.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("event_id");
 
+                    b.Property<Guid>("OrgId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("org_id");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -763,68 +839,95 @@ namespace EventPlug.Api.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_vendor_event_links");
 
-                    b.HasIndex("EventId")
-                        .HasDatabaseName("ix_vendor_event_links_event_id");
+                    b.HasAlternateKey("OrgId", "Id")
+                        .HasName("ak_vendor_event_links_org_id_id");
 
-                    b.HasIndex("VendorId")
-                        .HasDatabaseName("ix_vendor_event_links_vendor_id");
+                    b.HasIndex("OrgId", "EventId")
+                        .HasDatabaseName("ix_vendor_event_links_org_id_event_id");
+
+                    b.HasIndex("OrgId", "VendorId")
+                        .HasDatabaseName("ix_vendor_event_links_org_id_vendor_id");
 
                     b.ToTable("vendor_event_links", (string)null);
                 });
 
             modelBuilder.Entity("EventPlug.Api.Domain.Entities.AIStructuringDraft", b =>
                 {
-                    b.HasOne("EventPlug.Api.Domain.Entities.User", "CreatedByUser")
-                        .WithMany("AiStructuringDrafts")
-                        .HasForeignKey("CreatedBy")
+                    b.HasOne("EventPlug.Api.Domain.Entities.Organization", "Organization")
+                        .WithMany()
+                        .HasForeignKey("OrgId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_ai_structuring_drafts_users_created_by");
+                        .HasConstraintName("fk_ai_structuring_drafts_organizations_org_id");
+
+                    b.HasOne("EventPlug.Api.Domain.Entities.User", "CreatedByUser")
+                        .WithMany("AiStructuringDrafts")
+                        .HasForeignKey("OrgId", "CreatedBy")
+                        .HasPrincipalKey("OrgId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_ai_structuring_drafts_users_org_id_created_by");
 
                     b.HasOne("EventPlug.Api.Domain.Entities.Event", "Event")
                         .WithMany("AiStructuringDrafts")
-                        .HasForeignKey("EventId")
+                        .HasForeignKey("OrgId", "EventId")
+                        .HasPrincipalKey("OrgId", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_ai_structuring_drafts_events_event_id");
+                        .HasConstraintName("fk_ai_structuring_drafts_events_org_id_event_id");
 
                     b.Navigation("CreatedByUser");
 
                     b.Navigation("Event");
+
+                    b.Navigation("Organization");
                 });
 
             modelBuilder.Entity("EventPlug.Api.Domain.Entities.Approval", b =>
                 {
-                    b.HasOne("EventPlug.Api.Domain.Entities.User", "ApproverUser")
-                        .WithMany("DecidingApprovals")
-                        .HasForeignKey("ApproverId")
+                    b.HasOne("EventPlug.Api.Domain.Entities.Organization", "Organization")
+                        .WithMany()
+                        .HasForeignKey("OrgId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_approvals_users_approver_id");
+                        .HasConstraintName("fk_approvals_organizations_org_id");
+
+                    b.HasOne("EventPlug.Api.Domain.Entities.User", "ApproverUser")
+                        .WithMany("DecidingApprovals")
+                        .HasForeignKey("OrgId", "ApproverId")
+                        .HasPrincipalKey("OrgId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_approvals_users_org_id_approver_id");
 
                     b.HasOne("EventPlug.Api.Domain.Entities.Expense", "Expense")
                         .WithMany("Approvals")
-                        .HasForeignKey("ExpenseId")
+                        .HasForeignKey("OrgId", "ExpenseId")
+                        .HasPrincipalKey("OrgId", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_approvals_expenses_expense_id");
+                        .HasConstraintName("fk_approvals_expenses_org_id_expense_id");
 
                     b.HasOne("EventPlug.Api.Domain.Entities.User", "RequestedByUser")
                         .WithMany("RequestedApprovals")
-                        .HasForeignKey("RequestedBy")
+                        .HasForeignKey("OrgId", "RequestedBy")
+                        .HasPrincipalKey("OrgId", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_approvals_users_requested_by");
+                        .HasConstraintName("fk_approvals_users_org_id_requested_by");
 
                     b.HasOne("EventPlug.Api.Domain.Entities.Team", "Team")
                         .WithMany("Approvals")
-                        .HasForeignKey("TeamId")
+                        .HasForeignKey("OrgId", "TeamId")
+                        .HasPrincipalKey("OrgId", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_approvals_teams_team_id");
+                        .HasConstraintName("fk_approvals_teams_org_id_team_id");
 
                     b.Navigation("ApproverUser");
 
                     b.Navigation("Expense");
+
+                    b.Navigation("Organization");
 
                     b.Navigation("RequestedByUser");
 
@@ -833,35 +936,56 @@ namespace EventPlug.Api.Data.Migrations
 
             modelBuilder.Entity("EventPlug.Api.Domain.Entities.ApprovalAuditEntry", b =>
                 {
-                    b.HasOne("EventPlug.Api.Domain.Entities.User", "Actor")
-                        .WithMany("ApprovalAuditEntries")
-                        .HasForeignKey("ActorId")
+                    b.HasOne("EventPlug.Api.Domain.Entities.Organization", "Organization")
+                        .WithMany()
+                        .HasForeignKey("OrgId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_approval_audit_entries_users_actor_id");
+                        .HasConstraintName("fk_approval_audit_entries_organizations_org_id");
+
+                    b.HasOne("EventPlug.Api.Domain.Entities.User", "Actor")
+                        .WithMany("ApprovalAuditEntries")
+                        .HasForeignKey("OrgId", "ActorId")
+                        .HasPrincipalKey("OrgId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_approval_audit_entries_users_org_id_actor_id");
 
                     b.HasOne("EventPlug.Api.Domain.Entities.Approval", "Approval")
                         .WithMany("AuditEntries")
-                        .HasForeignKey("ApprovalId")
+                        .HasForeignKey("OrgId", "ApprovalId")
+                        .HasPrincipalKey("OrgId", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_approval_audit_entries_approvals_approval_id");
+                        .HasConstraintName("fk_approval_audit_entries_approvals_org_id_approval_id");
 
                     b.Navigation("Actor");
 
                     b.Navigation("Approval");
+
+                    b.Navigation("Organization");
                 });
 
             modelBuilder.Entity("EventPlug.Api.Domain.Entities.BudgetCategory", b =>
                 {
+                    b.HasOne("EventPlug.Api.Domain.Entities.Organization", "Organization")
+                        .WithMany()
+                        .HasForeignKey("OrgId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_budget_categories_organizations_org_id");
+
                     b.HasOne("EventPlug.Api.Domain.Entities.Event", "Event")
                         .WithMany("BudgetCategories")
-                        .HasForeignKey("EventId")
+                        .HasForeignKey("OrgId", "EventId")
+                        .HasPrincipalKey("OrgId", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_budget_categories_events_event_id");
+                        .HasConstraintName("fk_budget_categories_events_org_id_event_id");
 
                     b.Navigation("Event");
+
+                    b.Navigation("Organization");
                 });
 
             modelBuilder.Entity("EventPlug.Api.Domain.Entities.Event", b =>
@@ -887,124 +1011,190 @@ namespace EventPlug.Api.Data.Migrations
 
             modelBuilder.Entity("EventPlug.Api.Domain.Entities.EventTeam", b =>
                 {
-                    b.HasOne("EventPlug.Api.Domain.Entities.User", "ApproverUser")
-                        .WithMany("EventTeamApprovals")
-                        .HasForeignKey("ApproverUserId")
+                    b.HasOne("EventPlug.Api.Domain.Entities.Organization", "Organization")
+                        .WithMany("EventTeams")
+                        .HasForeignKey("OrgId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_event_teams_users_approver_user_id");
+                        .HasConstraintName("fk_event_teams_organizations_org_id");
+
+                    b.HasOne("EventPlug.Api.Domain.Entities.User", "ApproverUser")
+                        .WithMany("EventTeamApprovals")
+                        .HasForeignKey("OrgId", "ApproverUserId")
+                        .HasPrincipalKey("OrgId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_event_teams_users_org_id_approver_user_id");
 
                     b.HasOne("EventPlug.Api.Domain.Entities.Event", "Event")
                         .WithMany("EventTeams")
-                        .HasForeignKey("EventId")
+                        .HasForeignKey("OrgId", "EventId")
+                        .HasPrincipalKey("OrgId", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_event_teams_events_event_id");
+                        .HasConstraintName("fk_event_teams_events_org_id_event_id");
 
                     b.HasOne("EventPlug.Api.Domain.Entities.Team", "Team")
                         .WithMany("EventTeams")
-                        .HasForeignKey("TeamId")
+                        .HasForeignKey("OrgId", "TeamId")
+                        .HasPrincipalKey("OrgId", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_event_teams_teams_team_id");
+                        .HasConstraintName("fk_event_teams_teams_org_id_team_id");
 
                     b.Navigation("ApproverUser");
 
                     b.Navigation("Event");
+
+                    b.Navigation("Organization");
 
                     b.Navigation("Team");
                 });
 
             modelBuilder.Entity("EventPlug.Api.Domain.Entities.Expense", b =>
                 {
-                    b.HasOne("EventPlug.Api.Domain.Entities.BudgetCategory", "BudgetCategory")
-                        .WithMany("Expenses")
-                        .HasForeignKey("BudgetCategoryId")
+                    b.HasOne("EventPlug.Api.Domain.Entities.Organization", "Organization")
+                        .WithMany()
+                        .HasForeignKey("OrgId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_expenses_budget_categories_budget_category_id");
+                        .HasConstraintName("fk_expenses_organizations_org_id");
+
+                    b.HasOne("EventPlug.Api.Domain.Entities.BudgetCategory", "BudgetCategory")
+                        .WithMany("Expenses")
+                        .HasForeignKey("OrgId", "BudgetCategoryId")
+                        .HasPrincipalKey("OrgId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_expenses_budget_categories_org_id_budget_category_id");
 
                     b.HasOne("EventPlug.Api.Domain.Entities.User", "CreatedByUser")
                         .WithMany("CreatedExpenses")
-                        .HasForeignKey("CreatedBy")
+                        .HasForeignKey("OrgId", "CreatedBy")
+                        .HasPrincipalKey("OrgId", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_expenses_users_created_by");
+                        .HasConstraintName("fk_expenses_users_org_id_created_by");
 
                     b.HasOne("EventPlug.Api.Domain.Entities.Vendor", "Vendor")
                         .WithMany("Expenses")
-                        .HasForeignKey("VendorId")
+                        .HasForeignKey("OrgId", "VendorId")
+                        .HasPrincipalKey("OrgId", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_expenses_vendors_vendor_id");
+                        .HasConstraintName("fk_expenses_vendors_org_id_vendor_id");
 
                     b.Navigation("BudgetCategory");
 
                     b.Navigation("CreatedByUser");
+
+                    b.Navigation("Organization");
 
                     b.Navigation("Vendor");
                 });
 
             modelBuilder.Entity("EventPlug.Api.Domain.Entities.ExpenseTeamSplit", b =>
                 {
+                    b.HasOne("EventPlug.Api.Domain.Entities.Organization", "Organization")
+                        .WithMany()
+                        .HasForeignKey("OrgId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_expense_team_splits_organizations_org_id");
+
                     b.HasOne("EventPlug.Api.Domain.Entities.Expense", "Expense")
                         .WithMany("ExpenseTeamSplits")
-                        .HasForeignKey("ExpenseId")
+                        .HasForeignKey("OrgId", "ExpenseId")
+                        .HasPrincipalKey("OrgId", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_expense_team_splits_expenses_expense_id");
+                        .HasConstraintName("fk_expense_team_splits_expenses_org_id_expense_id");
 
                     b.HasOne("EventPlug.Api.Domain.Entities.Team", "Team")
                         .WithMany("ExpenseTeamSplits")
-                        .HasForeignKey("TeamId")
+                        .HasForeignKey("OrgId", "TeamId")
+                        .HasPrincipalKey("OrgId", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_expense_team_splits_teams_team_id");
+                        .HasConstraintName("fk_expense_team_splits_teams_org_id_team_id");
 
                     b.Navigation("Expense");
+
+                    b.Navigation("Organization");
 
                     b.Navigation("Team");
                 });
 
             modelBuilder.Entity("EventPlug.Api.Domain.Entities.Guest", b =>
                 {
+                    b.HasOne("EventPlug.Api.Domain.Entities.Organization", "Organization")
+                        .WithMany("Guests")
+                        .HasForeignKey("OrgId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_guests_organizations_org_id");
+
                     b.HasOne("EventPlug.Api.Domain.Entities.Event", "Event")
                         .WithMany("Guests")
-                        .HasForeignKey("EventId")
+                        .HasForeignKey("OrgId", "EventId")
+                        .HasPrincipalKey("OrgId", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_guests_events_event_id");
+                        .HasConstraintName("fk_guests_events_org_id_event_id");
 
                     b.Navigation("Event");
+
+                    b.Navigation("Organization");
                 });
 
             modelBuilder.Entity("EventPlug.Api.Domain.Entities.QuoteRequest", b =>
                 {
-                    b.HasOne("EventPlug.Api.Domain.Entities.VendorEventLink", "VendorEventLink")
-                        .WithMany("QuoteRequests")
-                        .HasForeignKey("VendorEventLinkId")
+                    b.HasOne("EventPlug.Api.Domain.Entities.Organization", "Organization")
+                        .WithMany()
+                        .HasForeignKey("OrgId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_quote_requests_vendor_event_links_vendor_event_link_id");
+                        .HasConstraintName("fk_quote_requests_organizations_org_id");
+
+                    b.HasOne("EventPlug.Api.Domain.Entities.VendorEventLink", "VendorEventLink")
+                        .WithMany("QuoteRequests")
+                        .HasForeignKey("OrgId", "VendorEventLinkId")
+                        .HasPrincipalKey("OrgId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_quote_requests_vendor_event_links_org_id_vendor_event_link_");
+
+                    b.Navigation("Organization");
 
                     b.Navigation("VendorEventLink");
                 });
 
             modelBuilder.Entity("EventPlug.Api.Domain.Entities.RunSheetItem", b =>
                 {
+                    b.HasOne("EventPlug.Api.Domain.Entities.Organization", "Organization")
+                        .WithMany()
+                        .HasForeignKey("OrgId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_run_sheet_items_organizations_org_id");
+
                     b.HasOne("EventPlug.Api.Domain.Entities.Event", "Event")
                         .WithMany("RunSheetItems")
-                        .HasForeignKey("EventId")
+                        .HasForeignKey("OrgId", "EventId")
+                        .HasPrincipalKey("OrgId", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_run_sheet_items_events_event_id");
+                        .HasConstraintName("fk_run_sheet_items_events_org_id_event_id");
 
                     b.HasOne("EventPlug.Api.Domain.Entities.User", "OwnerUser")
                         .WithMany("RunSheetItems")
-                        .HasForeignKey("OwnerUserId")
+                        .HasForeignKey("OrgId", "OwnerUserId")
+                        .HasPrincipalKey("OrgId", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_run_sheet_items_users_owner_user_id");
+                        .HasConstraintName("fk_run_sheet_items_users_org_id_owner_user_id");
 
                     b.Navigation("Event");
+
+                    b.Navigation("Organization");
 
                     b.Navigation("OwnerUser");
                 });
@@ -1023,19 +1213,30 @@ namespace EventPlug.Api.Data.Migrations
 
             modelBuilder.Entity("EventPlug.Api.Domain.Entities.TeamMembership", b =>
                 {
-                    b.HasOne("EventPlug.Api.Domain.Entities.Team", "Team")
-                        .WithMany("Memberships")
-                        .HasForeignKey("TeamId")
+                    b.HasOne("EventPlug.Api.Domain.Entities.Organization", "Organization")
+                        .WithMany("TeamMemberships")
+                        .HasForeignKey("OrgId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_team_memberships_teams_team_id");
+                        .HasConstraintName("fk_team_memberships_organizations_org_id");
+
+                    b.HasOne("EventPlug.Api.Domain.Entities.Team", "Team")
+                        .WithMany("Memberships")
+                        .HasForeignKey("OrgId", "TeamId")
+                        .HasPrincipalKey("OrgId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_team_memberships_teams_org_id_team_id");
 
                     b.HasOne("EventPlug.Api.Domain.Entities.User", "User")
                         .WithMany("TeamMemberships")
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("OrgId", "UserId")
+                        .HasPrincipalKey("OrgId", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_team_memberships_users_user_id");
+                        .HasConstraintName("fk_team_memberships_users_org_id_user_id");
+
+                    b.Navigation("Organization");
 
                     b.Navigation("Team");
 
@@ -1068,21 +1269,32 @@ namespace EventPlug.Api.Data.Migrations
 
             modelBuilder.Entity("EventPlug.Api.Domain.Entities.VendorEventLink", b =>
                 {
-                    b.HasOne("EventPlug.Api.Domain.Entities.Event", "Event")
-                        .WithMany("VendorEventLinks")
-                        .HasForeignKey("EventId")
+                    b.HasOne("EventPlug.Api.Domain.Entities.Organization", "Organization")
+                        .WithMany()
+                        .HasForeignKey("OrgId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_vendor_event_links_events_event_id");
+                        .HasConstraintName("fk_vendor_event_links_organizations_org_id");
+
+                    b.HasOne("EventPlug.Api.Domain.Entities.Event", "Event")
+                        .WithMany("VendorEventLinks")
+                        .HasForeignKey("OrgId", "EventId")
+                        .HasPrincipalKey("OrgId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_vendor_event_links_events_org_id_event_id");
 
                     b.HasOne("EventPlug.Api.Domain.Entities.Vendor", "Vendor")
                         .WithMany("VendorEventLinks")
-                        .HasForeignKey("VendorId")
+                        .HasForeignKey("OrgId", "VendorId")
+                        .HasPrincipalKey("OrgId", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_vendor_event_links_vendors_vendor_id");
+                        .HasConstraintName("fk_vendor_event_links_vendors_org_id_vendor_id");
 
                     b.Navigation("Event");
+
+                    b.Navigation("Organization");
 
                     b.Navigation("Vendor");
                 });
@@ -1121,7 +1333,13 @@ namespace EventPlug.Api.Data.Migrations
 
             modelBuilder.Entity("EventPlug.Api.Domain.Entities.Organization", b =>
                 {
+                    b.Navigation("EventTeams");
+
                     b.Navigation("Events");
+
+                    b.Navigation("Guests");
+
+                    b.Navigation("TeamMemberships");
 
                     b.Navigation("Teams");
 

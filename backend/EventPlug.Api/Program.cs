@@ -1,8 +1,31 @@
 using EventPlug.Api.Data;
+using EventPlug.Api.Tenancy;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddScoped<ITenantContext, TenantContext>();
+
+var auth0Domain = builder.Configuration["Auth0:Domain"];
+var auth0Audience = builder.Configuration["Auth0:Audience"];
+var auth0IsConfigured =
+    !string.IsNullOrWhiteSpace(auth0Domain) &&
+    !string.IsNullOrWhiteSpace(auth0Audience);
+
+builder.Services.AddAuthorization();
+
+if (auth0IsConfigured)
+{
+    builder.Services
+        .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
+        {
+            options.Authority = $"https://{auth0Domain!.TrimEnd('/')}/";
+            options.Audience = auth0Audience;
+        });
+}
 
 builder.Services.AddCors(options =>
 {
@@ -22,6 +45,13 @@ builder.Services.AddDbContext<EventPlugDbContext>(options =>
 var app = builder.Build();
 
 app.UseCors();
+
+if (auth0IsConfigured)
+{
+    app.UseAuthentication();
+    app.UseMiddleware<TenantResolutionMiddleware>();
+    app.UseAuthorization();
+}
 
 var api = app.MapGroup("/api");
 

@@ -10,6 +10,7 @@ public class EventConfiguration : IEntityTypeConfiguration<Event>
     {
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
+        builder.HasAlternateKey(x => new { x.OrgId, x.Id });
 
         builder.Property(x => x.Title).HasMaxLength(250).IsRequired();
         builder.Property(x => x.EventDate).HasColumnType("date").IsRequired();

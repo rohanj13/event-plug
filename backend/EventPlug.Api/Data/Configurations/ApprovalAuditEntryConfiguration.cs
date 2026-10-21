@@ -15,14 +15,21 @@ public class ApprovalAuditEntryConfiguration : IEntityTypeConfiguration<Approval
         builder.Property(x => x.Comment).HasMaxLength(2000);
         builder.Property(x => x.Timestamp).IsRequired();
 
+        builder.HasOne(x => x.Organization)
+            .WithMany()
+            .HasForeignKey(x => x.OrgId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasOne(x => x.Approval)
             .WithMany(x => x.AuditEntries)
-            .HasForeignKey(x => x.ApprovalId)
+            .HasForeignKey(x => new { x.OrgId, x.ApprovalId })
+            .HasPrincipalKey(x => new { x.OrgId, x.Id })
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(x => x.Actor)
             .WithMany(x => x.ApprovalAuditEntries)
-            .HasForeignKey(x => x.ActorId)
+            .HasForeignKey(x => new { x.OrgId, UserId = x.ActorId })
+            .HasPrincipalKey(x => new { x.OrgId, x.Id })
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

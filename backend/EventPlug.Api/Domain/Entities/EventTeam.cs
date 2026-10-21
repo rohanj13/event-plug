@@ -2,9 +2,10 @@ using EventPlug.Api.Domain.Enums;
 
 namespace EventPlug.Api.Domain.Entities;
 
-public class EventTeam
+public class EventTeam : ITenantScoped
 {
     public Guid Id { get; set; }
+    public Guid OrgId { get; set; }
     public Guid EventId { get; set; }
     public Guid TeamId { get; set; }
     public SplitMethod SplitMethod { get; set; }
@@ -12,6 +13,7 @@ public class EventTeam
     public bool IsOwningTeam { get; set; }
     public Guid ApproverUserId { get; set; }
 
+    public Organization Organization { get; set; } = null!;
     public Event Event { get; set; } = null!;
     public Team Team { get; set; } = null!;
     public User ApproverUser { get; set; } = null!;

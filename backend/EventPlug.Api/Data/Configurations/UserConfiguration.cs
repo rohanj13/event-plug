@@ -10,12 +10,18 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
     {
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
+        builder.HasAlternateKey(x => new { x.OrgId, x.Id });
 
         builder.Property(x => x.Name).HasMaxLength(200).IsRequired();
+        builder.Property(x => x.Auth0Subject)
+            .HasColumnName("auth0_subject")
+            .HasMaxLength(255)
+            .IsRequired();
         builder.Property(x => x.Email).HasMaxLength(320).IsRequired();
         builder.Property(x => x.OrgRole).HasConversion<string>().HasMaxLength(50).IsRequired();
 
         builder.HasIndex(x => new { x.OrgId, x.Email }).IsUnique();
+        builder.HasIndex(x => new { x.OrgId, x.Auth0Subject }).IsUnique();
 
         builder.HasOne(x => x.Organization)
             .WithMany(x => x.Users)

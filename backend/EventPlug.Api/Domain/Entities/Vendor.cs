@@ -1,6 +1,6 @@
 namespace EventPlug.Api.Domain.Entities;
 
-public class Vendor
+public class Vendor : ITenantScoped
 {
     public Guid Id { get; set; }
     public Guid OrgId { get; set; }

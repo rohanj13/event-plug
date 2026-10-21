@@ -16,14 +16,21 @@ public class AIStructuringDraftConfiguration : IEntityTypeConfiguration<AIStruct
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.Accepted).IsRequired();
 
+        builder.HasOne(x => x.Organization)
+            .WithMany()
+            .HasForeignKey(x => x.OrgId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasOne(x => x.Event)
             .WithMany(x => x.AiStructuringDrafts)
-            .HasForeignKey(x => x.EventId)
+            .HasForeignKey(x => new { x.OrgId, x.EventId })
+            .HasPrincipalKey(x => new { x.OrgId, x.Id })
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(x => x.CreatedByUser)
             .WithMany(x => x.AiStructuringDrafts)
-            .HasForeignKey(x => x.CreatedBy)
+            .HasForeignKey(x => new { x.OrgId, UserId = x.CreatedBy })
+            .HasPrincipalKey(x => new { x.OrgId, x.Id })
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

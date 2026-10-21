@@ -11,6 +11,9 @@ public class Organization
     public DateTimeOffset CreatedAt { get; set; }
 
     public ICollection<Team> Teams { get; set; } = new List<Team>();
+    public ICollection<TeamMembership> TeamMemberships { get; set; } = new List<TeamMembership>();
+    public ICollection<EventTeam> EventTeams { get; set; } = new List<EventTeam>();
+    public ICollection<Guest> Guests { get; set; } = new List<Guest>();
     public ICollection<User> Users { get; set; } = new List<User>();
     public ICollection<Vendor> Vendors { get; set; } = new List<Vendor>();
     public ICollection<Event> Events { get; set; } = new List<Event>();

@@ -2,9 +2,10 @@ using EventPlug.Api.Domain.Enums;
 
 namespace EventPlug.Api.Domain.Entities;
 
-public class Approval
+public class Approval : ITenantScoped
 {
     public Guid Id { get; set; }
+    public Guid OrgId { get; set; }
     public Guid ExpenseId { get; set; }
     public Guid TeamId { get; set; }
     public Guid RequestedBy { get; set; }
@@ -12,6 +13,7 @@ public class Approval
     public ApprovalStatus Status { get; set; }
     public DateTimeOffset? DecidedAt { get; set; }
 
+    public Organization Organization { get; set; } = null!;
     public Expense Expense { get; set; } = null!;
     public Team Team { get; set; } = null!;
     public User RequestedByUser { get; set; } = null!;

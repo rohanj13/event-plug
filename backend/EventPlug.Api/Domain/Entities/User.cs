@@ -2,10 +2,11 @@ using EventPlug.Api.Domain.Enums;
 
 namespace EventPlug.Api.Domain.Entities;
 
-public class User
+public class User : ITenantScoped
 {
     public Guid Id { get; set; }
     public Guid OrgId { get; set; }
+    public string Auth0Subject { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public OrgRole OrgRole { get; set; }

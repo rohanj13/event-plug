@@ -1,10 +1,21 @@
 using EventPlug.Api.Domain.Entities;
+using EventPlug.Api.Tenancy;
 using Microsoft.EntityFrameworkCore;
 
 namespace EventPlug.Api.Data;
 
-public class EventPlugDbContext(DbContextOptions<EventPlugDbContext> options) : DbContext(options)
+public class EventPlugDbContext : DbContext
 {
+    private readonly ITenantContext tenantContext;
+
+    public EventPlugDbContext(
+        DbContextOptions<EventPlugDbContext> options,
+        ITenantContext tenantContext)
+        : base(options)
+    {
+        this.tenantContext = tenantContext;
+    }
+
     public DbSet<Organization> Organizations => Set<Organization>();
     public DbSet<Team> Teams => Set<Team>();
     public DbSet<User> Users => Set<User>();
@@ -27,5 +38,29 @@ public class EventPlugDbContext(DbContextOptions<EventPlugDbContext> options) : 
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(EventPlugDbContext).Assembly);
+
+        ApplyTenantFilter<User>(modelBuilder);
+        ApplyTenantFilter<Team>(modelBuilder);
+        ApplyTenantFilter<TeamMembership>(modelBuilder);
+        ApplyTenantFilter<Event>(modelBuilder);
+        ApplyTenantFilter<EventTeam>(modelBuilder);
+        ApplyTenantFilter<Guest>(modelBuilder);
+        ApplyTenantFilter<BudgetCategory>(modelBuilder);
+        ApplyTenantFilter<Expense>(modelBuilder);
+        ApplyTenantFilter<ExpenseTeamSplit>(modelBuilder);
+        ApplyTenantFilter<Approval>(modelBuilder);
+        ApplyTenantFilter<ApprovalAuditEntry>(modelBuilder);
+        ApplyTenantFilter<RunSheetItem>(modelBuilder);
+        ApplyTenantFilter<Vendor>(modelBuilder);
+        ApplyTenantFilter<VendorEventLink>(modelBuilder);
+        ApplyTenantFilter<QuoteRequest>(modelBuilder);
+        ApplyTenantFilter<AIStructuringDraft>(modelBuilder);
+    }
+
+    private void ApplyTenantFilter<TEntity>(ModelBuilder modelBuilder)
+        where TEntity : class, ITenantScoped
+    {
+        modelBuilder.Entity<TEntity>()
+            .HasQueryFilter(entity => entity.OrgId == tenantContext.OrganizationId);
     }
 }

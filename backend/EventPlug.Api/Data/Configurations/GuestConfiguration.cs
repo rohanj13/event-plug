@@ -17,9 +17,15 @@ public class GuestConfiguration : IEntityTypeConfiguration<Guest>
         builder.Property(x => x.DietaryNotes).HasMaxLength(2000);
         builder.Property(x => x.AccessNotes).HasMaxLength(2000);
 
+        builder.HasOne(x => x.Organization)
+            .WithMany(x => x.Guests)
+            .HasForeignKey(x => x.OrgId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasOne(x => x.Event)
             .WithMany(x => x.Guests)
-            .HasForeignKey(x => x.EventId)
+            .HasForeignKey(x => new { x.OrgId, x.EventId })
+            .HasPrincipalKey(x => new { x.OrgId, x.Id })
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -39,6 +39,7 @@ namespace EventPlug.Api.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_teams", x => x.id);
+                    table.UniqueConstraint("ak_teams_org_id_id", x => new { x.org_id, x.id });
                     table.ForeignKey(
                         name: "fk_teams_organizations_org_id",
                         column: x => x.org_id,
@@ -53,6 +54,7 @@ namespace EventPlug.Api.Data.Migrations
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     org_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    auth0_subject = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     email = table.Column<string>(type: "character varying(320)", maxLength: 320, nullable: false),
                     org_role = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false)
@@ -60,6 +62,7 @@ namespace EventPlug.Api.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_users", x => x.id);
+                    table.UniqueConstraint("ak_users_org_id_id", x => new { x.org_id, x.id });
                     table.ForeignKey(
                         name: "fk_users_organizations_org_id",
                         column: x => x.org_id,
@@ -83,6 +86,7 @@ namespace EventPlug.Api.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_vendors", x => x.id);
+                    table.UniqueConstraint("ak_vendors_org_id_id", x => new { x.org_id, x.id });
                     table.ForeignKey(
                         name: "fk_vendors_organizations_org_id",
                         column: x => x.org_id,
@@ -111,6 +115,7 @@ namespace EventPlug.Api.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_events", x => x.id);
+                    table.UniqueConstraint("ak_events_org_id_id", x => new { x.org_id, x.id });
                     table.ForeignKey(
                         name: "fk_events_organizations_org_id",
                         column: x => x.org_id,
@@ -130,6 +135,7 @@ namespace EventPlug.Api.Data.Migrations
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
+                    org_id = table.Column<Guid>(type: "uuid", nullable: false),
                     user_id = table.Column<Guid>(type: "uuid", nullable: false),
                     team_id = table.Column<Guid>(type: "uuid", nullable: false),
                     team_role = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false)
@@ -138,16 +144,22 @@ namespace EventPlug.Api.Data.Migrations
                 {
                     table.PrimaryKey("pk_team_memberships", x => x.id);
                     table.ForeignKey(
-                        name: "fk_team_memberships_teams_team_id",
-                        column: x => x.team_id,
-                        principalTable: "teams",
+                        name: "fk_team_memberships_organizations_org_id",
+                        column: x => x.org_id,
+                        principalTable: "organizations",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "fk_team_memberships_users_user_id",
-                        column: x => x.user_id,
+                        name: "fk_team_memberships_teams_org_id_team_id",
+                        columns: x => new { x.org_id, x.team_id },
+                        principalTable: "teams",
+                        principalColumns: new[] { "org_id", "id" },
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_team_memberships_users_org_id_user_id",
+                        columns: x => new { x.org_id, x.user_id },
                         principalTable: "users",
-                        principalColumn: "id",
+                        principalColumns: new[] { "org_id", "id" },
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -156,6 +168,7 @@ namespace EventPlug.Api.Data.Migrations
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
+                    org_id = table.Column<Guid>(type: "uuid", nullable: false),
                     event_id = table.Column<Guid>(type: "uuid", nullable: true),
                     raw_input_text = table.Column<string>(type: "text", nullable: false),
                     structured_output = table.Column<JsonDocument>(type: "jsonb", nullable: false),
@@ -167,16 +180,22 @@ namespace EventPlug.Api.Data.Migrations
                 {
                     table.PrimaryKey("pk_ai_structuring_drafts", x => x.id);
                     table.ForeignKey(
-                        name: "fk_ai_structuring_drafts_events_event_id",
-                        column: x => x.event_id,
+                        name: "fk_ai_structuring_drafts_events_org_id_event_id",
+                        columns: x => new { x.org_id, x.event_id },
                         principalTable: "events",
+                        principalColumns: new[] { "org_id", "id" },
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_ai_structuring_drafts_organizations_org_id",
+                        column: x => x.org_id,
+                        principalTable: "organizations",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "fk_ai_structuring_drafts_users_created_by",
-                        column: x => x.created_by,
+                        name: "fk_ai_structuring_drafts_users_org_id_created_by",
+                        columns: x => new { x.org_id, x.created_by },
                         principalTable: "users",
-                        principalColumn: "id",
+                        principalColumns: new[] { "org_id", "id" },
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -185,6 +204,7 @@ namespace EventPlug.Api.Data.Migrations
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
+                    org_id = table.Column<Guid>(type: "uuid", nullable: false),
                     event_id = table.Column<Guid>(type: "uuid", nullable: false),
                     category_type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     allocated_amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
@@ -193,12 +213,19 @@ namespace EventPlug.Api.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_budget_categories", x => x.id);
+                    table.UniqueConstraint("ak_budget_categories_org_id_id", x => new { x.org_id, x.id });
                     table.ForeignKey(
-                        name: "fk_budget_categories_events_event_id",
-                        column: x => x.event_id,
+                        name: "fk_budget_categories_events_org_id_event_id",
+                        columns: x => new { x.org_id, x.event_id },
                         principalTable: "events",
-                        principalColumn: "id",
+                        principalColumns: new[] { "org_id", "id" },
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_budget_categories_organizations_org_id",
+                        column: x => x.org_id,
+                        principalTable: "organizations",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -206,6 +233,7 @@ namespace EventPlug.Api.Data.Migrations
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
+                    org_id = table.Column<Guid>(type: "uuid", nullable: false),
                     event_id = table.Column<Guid>(type: "uuid", nullable: false),
                     team_id = table.Column<Guid>(type: "uuid", nullable: false),
                     split_method = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
@@ -217,22 +245,28 @@ namespace EventPlug.Api.Data.Migrations
                 {
                     table.PrimaryKey("pk_event_teams", x => x.id);
                     table.ForeignKey(
-                        name: "fk_event_teams_events_event_id",
-                        column: x => x.event_id,
+                        name: "fk_event_teams_events_org_id_event_id",
+                        columns: x => new { x.org_id, x.event_id },
                         principalTable: "events",
-                        principalColumn: "id",
+                        principalColumns: new[] { "org_id", "id" },
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "fk_event_teams_teams_team_id",
-                        column: x => x.team_id,
-                        principalTable: "teams",
+                        name: "fk_event_teams_organizations_org_id",
+                        column: x => x.org_id,
+                        principalTable: "organizations",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "fk_event_teams_users_approver_user_id",
-                        column: x => x.approver_user_id,
+                        name: "fk_event_teams_teams_org_id_team_id",
+                        columns: x => new { x.org_id, x.team_id },
+                        principalTable: "teams",
+                        principalColumns: new[] { "org_id", "id" },
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_event_teams_users_org_id_approver_user_id",
+                        columns: x => new { x.org_id, x.approver_user_id },
                         principalTable: "users",
-                        principalColumn: "id",
+                        principalColumns: new[] { "org_id", "id" },
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -241,6 +275,7 @@ namespace EventPlug.Api.Data.Migrations
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
+                    org_id = table.Column<Guid>(type: "uuid", nullable: false),
                     event_id = table.Column<Guid>(type: "uuid", nullable: false),
                     name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     email = table.Column<string>(type: "character varying(320)", maxLength: 320, nullable: false),
@@ -252,11 +287,17 @@ namespace EventPlug.Api.Data.Migrations
                 {
                     table.PrimaryKey("pk_guests", x => x.id);
                     table.ForeignKey(
-                        name: "fk_guests_events_event_id",
-                        column: x => x.event_id,
+                        name: "fk_guests_events_org_id_event_id",
+                        columns: x => new { x.org_id, x.event_id },
                         principalTable: "events",
-                        principalColumn: "id",
+                        principalColumns: new[] { "org_id", "id" },
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_guests_organizations_org_id",
+                        column: x => x.org_id,
+                        principalTable: "organizations",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -264,6 +305,7 @@ namespace EventPlug.Api.Data.Migrations
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
+                    org_id = table.Column<Guid>(type: "uuid", nullable: false),
                     event_id = table.Column<Guid>(type: "uuid", nullable: false),
                     start_time = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     title = table.Column<string>(type: "character varying(250)", maxLength: 250, nullable: false),
@@ -274,16 +316,22 @@ namespace EventPlug.Api.Data.Migrations
                 {
                     table.PrimaryKey("pk_run_sheet_items", x => x.id);
                     table.ForeignKey(
-                        name: "fk_run_sheet_items_events_event_id",
-                        column: x => x.event_id,
+                        name: "fk_run_sheet_items_events_org_id_event_id",
+                        columns: x => new { x.org_id, x.event_id },
                         principalTable: "events",
-                        principalColumn: "id",
+                        principalColumns: new[] { "org_id", "id" },
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "fk_run_sheet_items_users_owner_user_id",
-                        column: x => x.owner_user_id,
-                        principalTable: "users",
+                        name: "fk_run_sheet_items_organizations_org_id",
+                        column: x => x.org_id,
+                        principalTable: "organizations",
                         principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_run_sheet_items_users_org_id_owner_user_id",
+                        columns: x => new { x.org_id, x.owner_user_id },
+                        principalTable: "users",
+                        principalColumns: new[] { "org_id", "id" },
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -292,6 +340,7 @@ namespace EventPlug.Api.Data.Migrations
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
+                    org_id = table.Column<Guid>(type: "uuid", nullable: false),
                     event_id = table.Column<Guid>(type: "uuid", nullable: false),
                     vendor_id = table.Column<Guid>(type: "uuid", nullable: false),
                     status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false)
@@ -299,17 +348,24 @@ namespace EventPlug.Api.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_vendor_event_links", x => x.id);
+                    table.UniqueConstraint("ak_vendor_event_links_org_id_id", x => new { x.org_id, x.id });
                     table.ForeignKey(
-                        name: "fk_vendor_event_links_events_event_id",
-                        column: x => x.event_id,
+                        name: "fk_vendor_event_links_events_org_id_event_id",
+                        columns: x => new { x.org_id, x.event_id },
                         principalTable: "events",
+                        principalColumns: new[] { "org_id", "id" },
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_vendor_event_links_organizations_org_id",
+                        column: x => x.org_id,
+                        principalTable: "organizations",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "fk_vendor_event_links_vendors_vendor_id",
-                        column: x => x.vendor_id,
+                        name: "fk_vendor_event_links_vendors_org_id_vendor_id",
+                        columns: x => new { x.org_id, x.vendor_id },
                         principalTable: "vendors",
-                        principalColumn: "id",
+                        principalColumns: new[] { "org_id", "id" },
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -318,6 +374,7 @@ namespace EventPlug.Api.Data.Migrations
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
+                    org_id = table.Column<Guid>(type: "uuid", nullable: false),
                     budget_category_id = table.Column<Guid>(type: "uuid", nullable: false),
                     description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
                     amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
@@ -329,23 +386,30 @@ namespace EventPlug.Api.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_expenses", x => x.id);
+                    table.UniqueConstraint("ak_expenses_org_id_id", x => new { x.org_id, x.id });
                     table.ForeignKey(
-                        name: "fk_expenses_budget_categories_budget_category_id",
-                        column: x => x.budget_category_id,
+                        name: "fk_expenses_budget_categories_org_id_budget_category_id",
+                        columns: x => new { x.org_id, x.budget_category_id },
                         principalTable: "budget_categories",
+                        principalColumns: new[] { "org_id", "id" },
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_expenses_organizations_org_id",
+                        column: x => x.org_id,
+                        principalTable: "organizations",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "fk_expenses_users_created_by",
-                        column: x => x.created_by,
+                        name: "fk_expenses_users_org_id_created_by",
+                        columns: x => new { x.org_id, x.created_by },
                         principalTable: "users",
-                        principalColumn: "id",
+                        principalColumns: new[] { "org_id", "id" },
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "fk_expenses_vendors_vendor_id",
-                        column: x => x.vendor_id,
+                        name: "fk_expenses_vendors_org_id_vendor_id",
+                        columns: x => new { x.org_id, x.vendor_id },
                         principalTable: "vendors",
-                        principalColumn: "id",
+                        principalColumns: new[] { "org_id", "id" },
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -354,6 +418,7 @@ namespace EventPlug.Api.Data.Migrations
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
+                    org_id = table.Column<Guid>(type: "uuid", nullable: false),
                     vendor_event_link_id = table.Column<Guid>(type: "uuid", nullable: false),
                     brief_snapshot = table.Column<JsonDocument>(type: "jsonb", nullable: false),
                     sent_to_email = table.Column<string>(type: "character varying(320)", maxLength: 320, nullable: false),
@@ -364,10 +429,16 @@ namespace EventPlug.Api.Data.Migrations
                 {
                     table.PrimaryKey("pk_quote_requests", x => x.id);
                     table.ForeignKey(
-                        name: "fk_quote_requests_vendor_event_links_vendor_event_link_id",
-                        column: x => x.vendor_event_link_id,
-                        principalTable: "vendor_event_links",
+                        name: "fk_quote_requests_organizations_org_id",
+                        column: x => x.org_id,
+                        principalTable: "organizations",
                         principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_quote_requests_vendor_event_links_org_id_vendor_event_link_",
+                        columns: x => new { x.org_id, x.vendor_event_link_id },
+                        principalTable: "vendor_event_links",
+                        principalColumns: new[] { "org_id", "id" },
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -376,6 +447,7 @@ namespace EventPlug.Api.Data.Migrations
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
+                    org_id = table.Column<Guid>(type: "uuid", nullable: false),
                     expense_id = table.Column<Guid>(type: "uuid", nullable: false),
                     team_id = table.Column<Guid>(type: "uuid", nullable: false),
                     requested_by = table.Column<Guid>(type: "uuid", nullable: false),
@@ -386,29 +458,36 @@ namespace EventPlug.Api.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_approvals", x => x.id);
+                    table.UniqueConstraint("ak_approvals_org_id_id", x => new { x.org_id, x.id });
                     table.ForeignKey(
-                        name: "fk_approvals_expenses_expense_id",
-                        column: x => x.expense_id,
+                        name: "fk_approvals_expenses_org_id_expense_id",
+                        columns: x => new { x.org_id, x.expense_id },
                         principalTable: "expenses",
+                        principalColumns: new[] { "org_id", "id" },
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_approvals_organizations_org_id",
+                        column: x => x.org_id,
+                        principalTable: "organizations",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "fk_approvals_teams_team_id",
-                        column: x => x.team_id,
+                        name: "fk_approvals_teams_org_id_team_id",
+                        columns: x => new { x.org_id, x.team_id },
                         principalTable: "teams",
-                        principalColumn: "id",
+                        principalColumns: new[] { "org_id", "id" },
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "fk_approvals_users_approver_id",
-                        column: x => x.approver_id,
+                        name: "fk_approvals_users_org_id_approver_id",
+                        columns: x => new { x.org_id, x.approver_id },
                         principalTable: "users",
-                        principalColumn: "id",
+                        principalColumns: new[] { "org_id", "id" },
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "fk_approvals_users_requested_by",
-                        column: x => x.requested_by,
+                        name: "fk_approvals_users_org_id_requested_by",
+                        columns: x => new { x.org_id, x.requested_by },
                         principalTable: "users",
-                        principalColumn: "id",
+                        principalColumns: new[] { "org_id", "id" },
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -417,6 +496,7 @@ namespace EventPlug.Api.Data.Migrations
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
+                    org_id = table.Column<Guid>(type: "uuid", nullable: false),
                     expense_id = table.Column<Guid>(type: "uuid", nullable: false),
                     team_id = table.Column<Guid>(type: "uuid", nullable: false),
                     portion_amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false)
@@ -425,16 +505,22 @@ namespace EventPlug.Api.Data.Migrations
                 {
                     table.PrimaryKey("pk_expense_team_splits", x => x.id);
                     table.ForeignKey(
-                        name: "fk_expense_team_splits_expenses_expense_id",
-                        column: x => x.expense_id,
+                        name: "fk_expense_team_splits_expenses_org_id_expense_id",
+                        columns: x => new { x.org_id, x.expense_id },
                         principalTable: "expenses",
-                        principalColumn: "id",
+                        principalColumns: new[] { "org_id", "id" },
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "fk_expense_team_splits_teams_team_id",
-                        column: x => x.team_id,
-                        principalTable: "teams",
+                        name: "fk_expense_team_splits_organizations_org_id",
+                        column: x => x.org_id,
+                        principalTable: "organizations",
                         principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_expense_team_splits_teams_org_id_team_id",
+                        columns: x => new { x.org_id, x.team_id },
+                        principalTable: "teams",
+                        principalColumns: new[] { "org_id", "id" },
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -443,6 +529,7 @@ namespace EventPlug.Api.Data.Migrations
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
+                    org_id = table.Column<Guid>(type: "uuid", nullable: false),
                     approval_id = table.Column<Guid>(type: "uuid", nullable: false),
                     actor_id = table.Column<Guid>(type: "uuid", nullable: false),
                     action = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
@@ -453,68 +540,69 @@ namespace EventPlug.Api.Data.Migrations
                 {
                     table.PrimaryKey("pk_approval_audit_entries", x => x.id);
                     table.ForeignKey(
-                        name: "fk_approval_audit_entries_approvals_approval_id",
-                        column: x => x.approval_id,
+                        name: "fk_approval_audit_entries_approvals_org_id_approval_id",
+                        columns: x => new { x.org_id, x.approval_id },
                         principalTable: "approvals",
-                        principalColumn: "id",
+                        principalColumns: new[] { "org_id", "id" },
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "fk_approval_audit_entries_users_actor_id",
-                        column: x => x.actor_id,
-                        principalTable: "users",
+                        name: "fk_approval_audit_entries_organizations_org_id",
+                        column: x => x.org_id,
+                        principalTable: "organizations",
                         principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_approval_audit_entries_users_org_id_actor_id",
+                        columns: x => new { x.org_id, x.actor_id },
+                        principalTable: "users",
+                        principalColumns: new[] { "org_id", "id" },
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "ix_ai_structuring_drafts_created_by",
+                name: "ix_ai_structuring_drafts_org_id_created_by",
                 table: "ai_structuring_drafts",
-                column: "created_by");
+                columns: new[] { "org_id", "created_by" });
 
             migrationBuilder.CreateIndex(
-                name: "ix_ai_structuring_drafts_event_id",
+                name: "ix_ai_structuring_drafts_org_id_event_id",
                 table: "ai_structuring_drafts",
-                column: "event_id");
+                columns: new[] { "org_id", "event_id" });
 
             migrationBuilder.CreateIndex(
-                name: "ix_approval_audit_entries_actor_id",
+                name: "ix_approval_audit_entries_org_id_actor_id",
                 table: "approval_audit_entries",
-                column: "actor_id");
+                columns: new[] { "org_id", "actor_id" });
 
             migrationBuilder.CreateIndex(
-                name: "ix_approval_audit_entries_approval_id",
+                name: "ix_approval_audit_entries_org_id_approval_id",
                 table: "approval_audit_entries",
-                column: "approval_id");
+                columns: new[] { "org_id", "approval_id" });
 
             migrationBuilder.CreateIndex(
-                name: "ix_approvals_approver_id",
+                name: "ix_approvals_org_id_approver_id",
                 table: "approvals",
-                column: "approver_id");
+                columns: new[] { "org_id", "approver_id" });
 
             migrationBuilder.CreateIndex(
-                name: "ix_approvals_expense_id",
+                name: "ix_approvals_org_id_expense_id",
                 table: "approvals",
-                column: "expense_id");
+                columns: new[] { "org_id", "expense_id" });
 
             migrationBuilder.CreateIndex(
-                name: "ix_approvals_requested_by",
+                name: "ix_approvals_org_id_requested_by",
                 table: "approvals",
-                column: "requested_by");
+                columns: new[] { "org_id", "requested_by" });
 
             migrationBuilder.CreateIndex(
-                name: "ix_approvals_team_id",
+                name: "ix_approvals_org_id_team_id",
                 table: "approvals",
-                column: "team_id");
+                columns: new[] { "org_id", "team_id" });
 
             migrationBuilder.CreateIndex(
-                name: "ix_budget_categories_event_id",
+                name: "ix_budget_categories_org_id_event_id",
                 table: "budget_categories",
-                column: "event_id");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_event_teams_approver_user_id",
-                table: "event_teams",
-                column: "approver_user_id");
+                columns: new[] { "org_id", "event_id" });
 
             migrationBuilder.CreateIndex(
                 name: "ix_event_teams_event_id_team_id",
@@ -523,9 +611,19 @@ namespace EventPlug.Api.Data.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "ix_event_teams_team_id",
+                name: "ix_event_teams_org_id_approver_user_id",
                 table: "event_teams",
-                column: "team_id");
+                columns: new[] { "org_id", "approver_user_id" });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_event_teams_org_id_event_id",
+                table: "event_teams",
+                columns: new[] { "org_id", "event_id" });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_event_teams_org_id_team_id",
+                table: "event_teams",
+                columns: new[] { "org_id", "team_id" });
 
             migrationBuilder.CreateIndex(
                 name: "ix_events_created_by",
@@ -533,59 +631,59 @@ namespace EventPlug.Api.Data.Migrations
                 column: "created_by");
 
             migrationBuilder.CreateIndex(
-                name: "ix_events_org_id",
-                table: "events",
-                column: "org_id");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_expense_team_splits_expense_id",
+                name: "ix_expense_team_splits_org_id_expense_id",
                 table: "expense_team_splits",
-                column: "expense_id");
+                columns: new[] { "org_id", "expense_id" });
 
             migrationBuilder.CreateIndex(
-                name: "ix_expense_team_splits_team_id",
+                name: "ix_expense_team_splits_org_id_team_id",
                 table: "expense_team_splits",
-                column: "team_id");
+                columns: new[] { "org_id", "team_id" });
 
             migrationBuilder.CreateIndex(
-                name: "ix_expenses_budget_category_id",
+                name: "ix_expenses_org_id_budget_category_id",
                 table: "expenses",
-                column: "budget_category_id");
+                columns: new[] { "org_id", "budget_category_id" });
 
             migrationBuilder.CreateIndex(
-                name: "ix_expenses_created_by",
+                name: "ix_expenses_org_id_created_by",
                 table: "expenses",
-                column: "created_by");
+                columns: new[] { "org_id", "created_by" });
 
             migrationBuilder.CreateIndex(
-                name: "ix_expenses_vendor_id",
+                name: "ix_expenses_org_id_vendor_id",
                 table: "expenses",
-                column: "vendor_id");
+                columns: new[] { "org_id", "vendor_id" });
 
             migrationBuilder.CreateIndex(
-                name: "ix_guests_event_id",
+                name: "ix_guests_org_id_event_id",
                 table: "guests",
-                column: "event_id");
+                columns: new[] { "org_id", "event_id" });
 
             migrationBuilder.CreateIndex(
-                name: "ix_quote_requests_vendor_event_link_id",
+                name: "ix_quote_requests_org_id_vendor_event_link_id",
                 table: "quote_requests",
-                column: "vendor_event_link_id");
+                columns: new[] { "org_id", "vendor_event_link_id" });
 
             migrationBuilder.CreateIndex(
-                name: "ix_run_sheet_items_event_id",
+                name: "ix_run_sheet_items_org_id_event_id",
                 table: "run_sheet_items",
-                column: "event_id");
+                columns: new[] { "org_id", "event_id" });
 
             migrationBuilder.CreateIndex(
-                name: "ix_run_sheet_items_owner_user_id",
+                name: "ix_run_sheet_items_org_id_owner_user_id",
                 table: "run_sheet_items",
-                column: "owner_user_id");
+                columns: new[] { "org_id", "owner_user_id" });
 
             migrationBuilder.CreateIndex(
-                name: "ix_team_memberships_team_id",
+                name: "ix_team_memberships_org_id_team_id",
                 table: "team_memberships",
-                column: "team_id");
+                columns: new[] { "org_id", "team_id" });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_team_memberships_org_id_user_id",
+                table: "team_memberships",
+                columns: new[] { "org_id", "user_id" });
 
             migrationBuilder.CreateIndex(
                 name: "ix_team_memberships_user_id_team_id",
@@ -594,9 +692,10 @@ namespace EventPlug.Api.Data.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "ix_teams_org_id",
-                table: "teams",
-                column: "org_id");
+                name: "ix_users_org_id_auth0_subject",
+                table: "users",
+                columns: new[] { "org_id", "auth0_subject" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "ix_users_org_id_email",
@@ -605,19 +704,14 @@ namespace EventPlug.Api.Data.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "ix_vendor_event_links_event_id",
+                name: "ix_vendor_event_links_org_id_event_id",
                 table: "vendor_event_links",
-                column: "event_id");
+                columns: new[] { "org_id", "event_id" });
 
             migrationBuilder.CreateIndex(
-                name: "ix_vendor_event_links_vendor_id",
+                name: "ix_vendor_event_links_org_id_vendor_id",
                 table: "vendor_event_links",
-                column: "vendor_id");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_vendors_org_id",
-                table: "vendors",
-                column: "org_id");
+                columns: new[] { "org_id", "vendor_id" });
         }
 
         /// <inheritdoc />

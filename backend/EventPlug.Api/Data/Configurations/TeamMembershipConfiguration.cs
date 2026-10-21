@@ -13,16 +13,23 @@ public class TeamMembershipConfiguration : IEntityTypeConfiguration<TeamMembersh
 
         builder.Property(x => x.TeamRole).HasConversion<string>().HasMaxLength(50).IsRequired();
 
+        builder.HasOne(x => x.Organization)
+            .WithMany(x => x.TeamMemberships)
+            .HasForeignKey(x => x.OrgId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasIndex(x => new { x.UserId, x.TeamId }).IsUnique();
 
         builder.HasOne(x => x.User)
             .WithMany(x => x.TeamMemberships)
-            .HasForeignKey(x => x.UserId)
+            .HasForeignKey(x => new { x.OrgId, x.UserId })
+            .HasPrincipalKey(x => new { x.OrgId, x.Id })
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(x => x.Team)
             .WithMany(x => x.Memberships)
-            .HasForeignKey(x => x.TeamId)
+            .HasForeignKey(x => new { x.OrgId, x.TeamId })
+            .HasPrincipalKey(x => new { x.OrgId, x.Id })
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -16,9 +16,15 @@ public class QuoteRequestConfiguration : IEntityTypeConfiguration<QuoteRequest>
         builder.Property(x => x.SentAt).IsRequired();
         builder.Property(x => x.Status).HasConversion<string>().HasMaxLength(50).IsRequired();
 
+        builder.HasOne(x => x.Organization)
+            .WithMany()
+            .HasForeignKey(x => x.OrgId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasOne(x => x.VendorEventLink)
             .WithMany(x => x.QuoteRequests)
-            .HasForeignKey(x => x.VendorEventLinkId)
+            .HasForeignKey(x => new { x.OrgId, x.VendorEventLinkId })
+            .HasPrincipalKey(x => new { x.OrgId, x.Id })
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

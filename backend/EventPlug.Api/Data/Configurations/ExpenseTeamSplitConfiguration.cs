@@ -13,14 +13,21 @@ public class ExpenseTeamSplitConfiguration : IEntityTypeConfiguration<ExpenseTea
 
         builder.Property(x => x.PortionAmount).HasPrecision(18, 2).IsRequired();
 
+        builder.HasOne(x => x.Organization)
+            .WithMany()
+            .HasForeignKey(x => x.OrgId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasOne(x => x.Expense)
             .WithMany(x => x.ExpenseTeamSplits)
-            .HasForeignKey(x => x.ExpenseId)
+            .HasForeignKey(x => new { x.OrgId, x.ExpenseId })
+            .HasPrincipalKey(x => new { x.OrgId, x.Id })
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(x => x.Team)
             .WithMany(x => x.ExpenseTeamSplits)
-            .HasForeignKey(x => x.TeamId)
+            .HasForeignKey(x => new { x.OrgId, x.TeamId })
+            .HasPrincipalKey(x => new { x.OrgId, x.Id })
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

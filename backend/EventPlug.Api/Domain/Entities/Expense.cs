@@ -2,9 +2,10 @@ using EventPlug.Api.Domain.Enums;
 
 namespace EventPlug.Api.Domain.Entities;
 
-public class Expense
+public class Expense : ITenantScoped
 {
     public Guid Id { get; set; }
+    public Guid OrgId { get; set; }
     public Guid BudgetCategoryId { get; set; }
     public string Description { get; set; } = string.Empty;
     public decimal Amount { get; set; }
@@ -13,6 +14,7 @@ public class Expense
     public Guid CreatedBy { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
 
+    public Organization Organization { get; set; } = null!;
     public BudgetCategory BudgetCategory { get; set; } = null!;
     public Vendor? Vendor { get; set; }
     public User CreatedByUser { get; set; } = null!;
