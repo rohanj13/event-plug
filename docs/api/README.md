@@ -150,6 +150,25 @@ curl -s http://localhost:5199/swagger/v1/swagger.json | python3 -m json.tool > .
 - Swagger is served at `/swagger` (`Swagger__Enabled=true`).
 - CORS allows `https://*.lovable.app`, `https://*.lovableproject.com` and `http://localhost:5173`. Add more via `Cors__AllowedOrigins__N`.
 - The database URL Render provides (`postgresql://…`) is accepted as-is.
-- DevAuth cannot run in production, so callers must send a real Auth0 token and an `X-Org-Id` header.
-- After the first deploy, insert the organisation and your user (with your Auth0 `sub` as `auth0_subject`) into the cloud database. Users are not auto-provisioned.
+- The blueprint turns on **demo login** (`DemoAuth__Enabled=true`) and Render generates `DemoAuth__SigningKey`. See below.
+- To switch to real Auth0 later, set `DemoAuth__Enabled=false`, insert your organisation and users (Auth0 `sub` as `auth0_subject`), and have the front end send an Auth0 token plus `X-Org-Id`.
 - On the free plan the service sleeps when idle, so the first request after a pause takes around 30–60 seconds.
+
+## Demo login (sample organisation)
+
+With `DemoAuth:Enabled=true` the API seeds a sample organisation, **Acme Corp (Demo)** (`0d3e6a10-0000-4000-8000-000000000001`), on first start. It has the teams People & Culture and Engineering, two events with guests, run sheet, budget and vendors, and four personas:
+
+| Persona | User | Access |
+|---|---|---|
+| `admin` | Alex Admin | Org Admin: everything |
+| `planner` | Priya Planner | Planner on People & Culture: edits that team's events |
+| `approver` | Aaron Approver | Approver on People & Culture: read access for now |
+| `viewer` | Vic Viewer | Viewer: read-only |
+
+No passwords. The front end:
+
+1. `GET /api/v1/auth/demo-users` to show a "Log in as..." picker.
+2. `POST /api/v1/auth/demo-login` with `{ "persona": "planner" }`, which returns `{ accessToken, tokenType, expiresAt, orgId, user }`.
+3. Sends `Authorization: Bearer <accessToken>` on every other call. `X-Org-Id` is optional, because it defaults to the demo org.
+
+Tokens last 12 hours (`DemoAuth:TokenLifetimeHours`). Anyone with the URL can sign in, so only put sample data here. To reset the data, drop the demo org (or the database) and restart. When demo mode is off, both endpoints return 404 `demo_disabled`.

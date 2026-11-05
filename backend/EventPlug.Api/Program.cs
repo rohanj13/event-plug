@@ -52,7 +52,12 @@ if (devAuth.Enabled)
     }
 }
 
-var authIsEnabled = auth0IsConfigured || devAuth.Enabled;
+var demoAuthSection = builder.Configuration.GetSection(DemoAuthOptions.Section);
+var demoAuth = demoAuthSection.Get<DemoAuthOptions>() ?? new DemoAuthOptions();
+builder.Services.Configure<DemoAuthOptions>(demoAuthSection);
+demoAuth.Validate();
+
+var authIsEnabled = auth0IsConfigured || devAuth.Enabled || demoAuth.Enabled;
 
 builder.Services.AddAuthorization();
 
@@ -61,6 +66,16 @@ if (devAuth.Enabled)
     builder.Services
         .AddAuthentication(DevAuthOptions.Scheme)
         .AddScheme<AuthenticationSchemeOptions, DevAuthHandler>(DevAuthOptions.Scheme, _ => { });
+}
+else if (demoAuth.Enabled)
+{
+    builder.Services
+        .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
+        {
+            options.MapInboundClaims = false;
+            options.TokenValidationParameters = demoAuth.CreateValidationParameters();
+        });
 }
 else if (auth0IsConfigured)
 {
@@ -102,6 +117,12 @@ if (app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
     scope.ServiceProvider.GetRequiredService<EventPlugDbContext>().Database.Migrate();
 }
 
+if (demoAuth.Enabled && demoAuth.SeedOnStartup)
+{
+    using var scope = app.Services.CreateScope();
+    await DemoDataSeeder.SeedAsync(scope.ServiceProvider.GetRequiredService<EventPlugDbContext>(), demoAuth.OrgId);
+}
+
 app.UseExceptionHandler();
 app.UseCors();
 
@@ -116,6 +137,12 @@ if (devAuth.Enabled)
     app.Logger.LogWarning(
         "DevAuth is ON: Auth0 is bypassed and every request runs as {Subject}. Development only.",
         devAuth.Subject);
+}
+else if (demoAuth.Enabled)
+{
+    app.Logger.LogWarning(
+        "DemoAuth is ON: anyone can sign in as a demo persona in org {OrgId}. Use only for sample data.",
+        demoAuth.OrgId);
 }
 
 if (authIsEnabled)
@@ -164,6 +191,7 @@ if (authIsEnabled)
     v1.RequireAuthorization();
 }
 
+v1.MapDemoAuthEndpoints();
 v1.MapIdentityEndpoints();
 v1.MapTeamEndpoints();
 v1.MapEventEndpoints();

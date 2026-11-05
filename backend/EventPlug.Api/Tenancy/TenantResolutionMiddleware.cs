@@ -12,10 +12,13 @@ public sealed class TenantResolutionMiddleware
     private readonly RequestDelegate next;
     private readonly Guid? defaultOrganizationId;
 
-    public TenantResolutionMiddleware(RequestDelegate next, IOptions<DevAuthOptions> devAuth)
+    public TenantResolutionMiddleware(RequestDelegate next, IOptions<DevAuthOptions> devAuth, IOptions<DemoAuthOptions> demoAuth)
     {
         this.next = next;
-        defaultOrganizationId = devAuth.Value.Enabled ? devAuth.Value.OrgId : null;
+        defaultOrganizationId =
+            devAuth.Value.Enabled ? devAuth.Value.OrgId :
+            demoAuth.Value.Enabled ? demoAuth.Value.OrgId :
+            null;
     }
 
     public async Task InvokeAsync(
@@ -83,6 +86,7 @@ public sealed class TenantResolutionMiddleware
     {
         return path.StartsWithSegments("/api/health") ||
                path.StartsWithSegments("/api/db-check") ||
+               path.StartsWithSegments("/api/v1/auth") ||
                path.StartsWithSegments("/swagger");
     }
 

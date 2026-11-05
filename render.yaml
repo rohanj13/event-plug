@@ -18,6 +18,10 @@ services:
           property: connectionString
       - key: Database__MigrateOnStartup
         value: "true"
+      - key: DemoAuth__Enabled
+        value: "true"
+      - key: DemoAuth__SigningKey
+        generateValue: true
       - key: Swagger__Enabled
         value: "true"
       - key: Cors__AllowedOrigins__0

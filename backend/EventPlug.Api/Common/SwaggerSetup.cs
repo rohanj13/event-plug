@@ -20,7 +20,8 @@ public static class SwaggerSetup
                 Version = "v1",
                 Description =
                     "All /api/v1 endpoints require an Auth0 access token (Authorization: Bearer <token>) " +
-                    "and the X-Org-Id header. IDs are UUIDs, enums are strings, money is a decimal string " +
+                    "and the X-Org-Id header. On demo servers, sign in with POST /api/v1/auth/demo-login instead; " +
+                    "its token works the same way and X-Org-Id is optional. IDs are UUIDs, enums are strings, money is a decimal string " +
                     "(e.g. \"1250.00\"). Lists return { items, total }; errors return { code, message, fieldErrors? }."
             });
 
@@ -87,7 +88,8 @@ public static class SwaggerSetup
         public void Apply(OpenApiOperation operation, OperationFilterContext context)
         {
             var path = "/" + (context.ApiDescription.RelativePath ?? string.Empty);
-            if (!path.StartsWith("/api/v1", StringComparison.OrdinalIgnoreCase))
+            if (!path.StartsWith("/api/v1", StringComparison.OrdinalIgnoreCase) ||
+                path.StartsWith("/api/v1/auth/", StringComparison.OrdinalIgnoreCase))
             {
                 return;
             }

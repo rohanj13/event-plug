@@ -2,7 +2,7 @@
   "openapi": "3.0.1",
   "info": {
     "title": "EventPlug API",
-    "description": "All /api/v1 endpoints require an Auth0 access token (Authorization: Bearer <token>) and the X-Org-Id header. IDs are UUIDs, enums are strings, money is a decimal string (e.g. \"1250.00\"). Lists return { items, total }; errors return { code, message, fieldErrors? }.",
+    "description": "All /api/v1 endpoints require an Auth0 access token (Authorization: Bearer <token>) and the X-Org-Id header. On demo servers, sign in with POST /api/v1/auth/demo-login instead; its token works the same way and X-Org-Id is optional. IDs are UUIDs, enums are strings, money is a decimal string (e.g. \"1250.00\"). Lists return { items, total }; errors return { code, message, fieldErrors? }.",
     "version": "v1"
   },
   "paths": {
@@ -844,6 +844,152 @@
             "OrgId": []
           }
         ]
+      }
+    },
+    "/api/v1/auth/demo-users": {
+      "get": {
+        "tags": [
+          "Demo login"
+        ],
+        "summary": "Demo personas that can sign in without a password. Only available when demo mode is on.",
+        "operationId": "listDemoUsers",
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoPersonaResponseList"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/demo-login": {
+      "post": {
+        "tags": [
+          "Demo login"
+        ],
+        "summary": "Sign in as a demo persona. Send the returned accessToken as 'Authorization: Bearer <token>'; X-Org-Id is optional in demo mode.",
+        "operationId": "demoLogin",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/DemoLoginRequest"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoLoginResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/events/{eventId}/teams": {
@@ -5120,6 +5266,123 @@
           "notes": {
             "type": "string",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DemoLoginRequest": {
+        "required": [
+          "persona"
+        ],
+        "type": "object",
+        "properties": {
+          "persona": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DemoLoginResponse": {
+        "required": [
+          "accessToken",
+          "expiresAt",
+          "orgId",
+          "tokenType",
+          "user"
+        ],
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "tokenType": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "orgId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DemoPersonaResponse"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "DemoPersonaResponse": {
+        "required": [
+          "description",
+          "email",
+          "name",
+          "orgRole",
+          "persona",
+          "teams"
+        ],
+        "type": "object",
+        "properties": {
+          "persona": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "orgRole": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "teams": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DemoPersonaTeamResponse"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "DemoPersonaResponseList": {
+        "required": [
+          "items",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DemoPersonaResponse"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DemoPersonaTeamResponse": {
+        "required": [
+          "role",
+          "teamName"
+        ],
+        "type": "object",
+        "properties": {
+          "teamName": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
           }
         },
         "additionalProperties": false
