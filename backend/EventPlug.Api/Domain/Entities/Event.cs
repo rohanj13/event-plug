@@ -8,6 +8,7 @@ public class Event : ITenantScoped
     public Guid OrgId { get; set; }
     public string Title { get; set; } = string.Empty;
     public DateOnly EventDate { get; set; }
+    public DateOnly? EndDate { get; set; }
     public string Location { get; set; } = string.Empty;
     public int? GuestCountEstimate { get; set; }
     public string? BudgetBand { get; set; }

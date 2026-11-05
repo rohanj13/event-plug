@@ -245,6 +245,10 @@ namespace EventPlug.Api.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("created_by");
 
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date")
+                        .HasColumnName("end_date");
+
                     b.Property<DateOnly>("EventDate")
                         .HasColumnType("date")
                         .HasColumnName("event_date");
@@ -292,7 +296,10 @@ namespace EventPlug.Api.Data.Migrations
                     b.HasIndex("CreatedBy")
                         .HasDatabaseName("ix_events_created_by");
 
-                    b.ToTable("events", (string)null);
+                    b.ToTable("events", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_events_end_date_after_event_date", "end_date IS NULL OR end_date >= event_date");
+                        });
                 });
 
             modelBuilder.Entity("EventPlug.Api.Domain.Entities.EventTeam", b =>
@@ -594,10 +601,20 @@ namespace EventPlug.Api.Data.Migrations
                         .HasColumnName("id")
                         .HasDefaultValueSql("gen_random_uuid()");
 
+                    b.Property<int>("Day")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1)
+                        .HasColumnName("day");
+
                     b.Property<string>("Description")
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)")
                         .HasColumnName("description");
+
+                    b.Property<DateTimeOffset?>("EndTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("end_time");
 
                     b.Property<Guid>("EventId")
                         .HasColumnType("uuid")
@@ -610,6 +627,12 @@ namespace EventPlug.Api.Data.Migrations
                     b.Property<Guid?>("OwnerUserId")
                         .HasColumnType("uuid")
                         .HasColumnName("owner_user_id");
+
+                    b.Property<int>("SortOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("sort_order");
 
                     b.Property<DateTimeOffset>("StartTime")
                         .HasColumnType("timestamp with time zone")
@@ -630,7 +653,15 @@ namespace EventPlug.Api.Data.Migrations
                     b.HasIndex("OrgId", "OwnerUserId")
                         .HasDatabaseName("ix_run_sheet_items_org_id_owner_user_id");
 
-                    b.ToTable("run_sheet_items", (string)null);
+                    b.HasIndex("EventId", "Day", "SortOrder")
+                        .HasDatabaseName("ix_run_sheet_items_event_id_day_sort_order");
+
+                    b.ToTable("run_sheet_items", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_run_sheet_items_day_positive", "day >= 1");
+
+                            t.HasCheckConstraint("ck_run_sheet_items_end_after_start", "end_time IS NULL OR end_time >= start_time");
+                        });
                 });
 
             modelBuilder.Entity("EventPlug.Api.Domain.Entities.Team", b =>

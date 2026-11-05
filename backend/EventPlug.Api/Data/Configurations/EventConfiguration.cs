@@ -14,6 +14,10 @@ public class EventConfiguration : IEntityTypeConfiguration<Event>
 
         builder.Property(x => x.Title).HasMaxLength(250).IsRequired();
         builder.Property(x => x.EventDate).HasColumnType("date").IsRequired();
+        builder.Property(x => x.EndDate).HasColumnType("date");
+        builder.ToTable(t => t.HasCheckConstraint(
+            "ck_events_end_date_after_event_date",
+            "end_date IS NULL OR end_date >= event_date"));
         builder.Property(x => x.Location).HasMaxLength(250).IsRequired();
         builder.Property(x => x.BudgetBand).HasMaxLength(120);
         builder.Property(x => x.Status).HasConversion<string>().HasMaxLength(50).IsRequired();

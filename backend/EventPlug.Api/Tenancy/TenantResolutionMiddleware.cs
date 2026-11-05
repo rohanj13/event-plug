@@ -1,17 +1,21 @@
 using System.Security.Claims;
+using EventPlug.Api.Common;
 using EventPlug.Api.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace EventPlug.Api.Tenancy;
 
 public sealed class TenantResolutionMiddleware
 {
-    private const string OrganizationHeader = "X-Organization-Id";
+    public const string OrganizationHeader = "X-Org-Id";
     private readonly RequestDelegate next;
+    private readonly Guid? defaultOrganizationId;
 
-    public TenantResolutionMiddleware(RequestDelegate next)
+    public TenantResolutionMiddleware(RequestDelegate next, IOptions<DevAuthOptions> devAuth)
     {
         this.next = next;
+        defaultOrganizationId = devAuth.Value.Enabled ? devAuth.Value.OrgId : null;
     }
 
     public async Task InvokeAsync(
@@ -27,18 +31,26 @@ public sealed class TenantResolutionMiddleware
 
         if (httpContext.User.Identity?.IsAuthenticated != true)
         {
-            httpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            await WriteErrorAsync(httpContext, StatusCodes.Status401Unauthorized, "unauthorized", "A valid bearer token is required.");
             return;
         }
 
-        if (!httpContext.Request.Headers.TryGetValue(OrganizationHeader, out var headerValue) ||
-            !Guid.TryParse(headerValue.ToString(), out var organizationId))
+        Guid organizationId;
+        if (httpContext.Request.Headers.TryGetValue(OrganizationHeader, out var headerValue))
         {
-            httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
-            await httpContext.Response.WriteAsJsonAsync(new
+            if (!Guid.TryParse(headerValue.ToString(), out organizationId))
             {
-                error = $"A valid {OrganizationHeader} header is required."
-            });
+                await WriteErrorAsync(httpContext, StatusCodes.Status400BadRequest, "missing_org", $"A valid {OrganizationHeader} header is required.");
+                return;
+            }
+        }
+        else if (defaultOrganizationId is { } fallback)
+        {
+            organizationId = fallback;
+        }
+        else
+        {
+            await WriteErrorAsync(httpContext, StatusCodes.Status400BadRequest, "missing_org", $"A valid {OrganizationHeader} header is required.");
             return;
         }
 
@@ -47,7 +59,7 @@ public sealed class TenantResolutionMiddleware
 
         if (string.IsNullOrWhiteSpace(auth0Subject))
         {
-            httpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            await WriteErrorAsync(httpContext, StatusCodes.Status401Unauthorized, "unauthorized", "The token has no subject claim.");
             return;
         }
 
@@ -59,7 +71,7 @@ public sealed class TenantResolutionMiddleware
 
         if (user is null)
         {
-            httpContext.Response.StatusCode = StatusCodes.Status403Forbidden;
+            await WriteErrorAsync(httpContext, StatusCodes.Status403Forbidden, "not_a_member", "You are not a member of this organisation.");
             return;
         }
 
@@ -70,6 +82,13 @@ public sealed class TenantResolutionMiddleware
     private static bool IsAnonymousEndpoint(PathString path)
     {
         return path.StartsWithSegments("/api/health") ||
-               path.StartsWithSegments("/api/db-check");
+               path.StartsWithSegments("/api/db-check") ||
+               path.StartsWithSegments("/swagger");
+    }
+
+    private static Task WriteErrorAsync(HttpContext httpContext, int statusCode, string code, string message)
+    {
+        httpContext.Response.StatusCode = statusCode;
+        return httpContext.Response.WriteAsJsonAsync(new ApiError(code, message));
     }
 }

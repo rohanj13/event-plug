@@ -12,6 +12,15 @@ public class RunSheetItemConfiguration : IEntityTypeConfiguration<RunSheetItem>
         builder.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
 
         builder.Property(x => x.StartTime).IsRequired();
+        builder.Property(x => x.EndTime);
+        builder.Property(x => x.Day).HasDefaultValue(1).IsRequired();
+        builder.Property(x => x.SortOrder).HasDefaultValue(0).IsRequired();
+        builder.ToTable(t =>
+        {
+            t.HasCheckConstraint("ck_run_sheet_items_day_positive", "day >= 1");
+            t.HasCheckConstraint("ck_run_sheet_items_end_after_start", "end_time IS NULL OR end_time >= start_time");
+        });
+        builder.HasIndex(x => new { x.EventId, x.Day, x.SortOrder });
         builder.Property(x => x.Title).HasMaxLength(250).IsRequired();
         builder.Property(x => x.Description).HasMaxLength(4000);
 
