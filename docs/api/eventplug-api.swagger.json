@@ -5106,10 +5106,24 @@
             "type": "string",
             "format": "uuid"
           },
+          "scope": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EventScope"
+              }
+            ],
+            "nullable": true
+          },
           "guestCountEstimate": {
             "type": "integer",
             "format": "int32",
             "nullable": true
+          },
+          "budgetAmount": {
+            "type": "string",
+            "format": "decimal",
+            "nullable": true,
+            "example": "0.00"
           },
           "budgetBand": {
             "type": "string",
@@ -5391,11 +5405,13 @@
         "required": [
           "createdAt",
           "createdBy",
+          "createdByName",
           "eventDate",
           "id",
           "isShared",
           "location",
           "owningTeamId",
+          "scope",
           "status",
           "teams",
           "title"
@@ -5428,10 +5444,23 @@
               }
             ]
           },
+          "scope": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EventScope"
+              }
+            ]
+          },
           "guestCountEstimate": {
             "type": "integer",
             "format": "int32",
             "nullable": true
+          },
+          "budgetAmount": {
+            "type": "string",
+            "format": "decimal",
+            "nullable": true,
+            "example": "0.00"
           },
           "budgetBand": {
             "type": "string",
@@ -5457,6 +5486,9 @@
           "createdBy": {
             "type": "string",
             "format": "uuid"
+          },
+          "createdByName": {
+            "type": "string"
           },
           "createdAt": {
             "type": "string",
@@ -5484,6 +5516,14 @@
           }
         },
         "additionalProperties": false
+      },
+      "EventScope": {
+        "enum": [
+          "Team",
+          "Department",
+          "CompanyWide"
+        ],
+        "type": "string"
       },
       "EventStatus": {
         "enum": [
@@ -6144,10 +6184,24 @@
             "type": "string",
             "nullable": true
           },
+          "scope": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EventScope"
+              }
+            ],
+            "nullable": true
+          },
           "guestCountEstimate": {
             "type": "integer",
             "format": "int32",
             "nullable": true
+          },
+          "budgetAmount": {
+            "type": "string",
+            "format": "decimal",
+            "nullable": true,
+            "example": "0.00"
           },
           "budgetBand": {
             "type": "string",

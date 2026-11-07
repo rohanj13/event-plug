@@ -232,6 +232,11 @@ namespace EventPlug.Api.Data.Migrations
                         .HasColumnName("id")
                         .HasDefaultValueSql("gen_random_uuid()");
 
+                    b.Property<decimal?>("BudgetAmount")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("budget_amount");
+
                     b.Property<string>("BudgetBand")
                         .HasMaxLength(120)
                         .HasColumnType("character varying(120)")
@@ -271,6 +276,14 @@ namespace EventPlug.Api.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("org_id");
 
+                    b.Property<string>("Scope")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("Team")
+                        .HasColumnName("scope");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -298,6 +311,8 @@ namespace EventPlug.Api.Data.Migrations
 
                     b.ToTable("events", null, t =>
                         {
+                            t.HasCheckConstraint("ck_events_budget_amount_non_negative", "budget_amount IS NULL OR budget_amount >= 0");
+
                             t.HasCheckConstraint("ck_events_end_date_after_event_date", "end_date IS NULL OR end_date >= event_date");
                         });
                 });

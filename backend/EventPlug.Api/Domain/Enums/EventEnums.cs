@@ -9,6 +9,13 @@ public enum EventStatus
     Cancelled
 }
 
+public enum EventScope
+{
+    Team,
+    Department,
+    CompanyWide
+}
+
 public enum SplitMethod
 {
     Even,

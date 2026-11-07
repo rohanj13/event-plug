@@ -104,6 +104,7 @@ Allowed browser origins come from `Cors:AllowedOrigins` (or `Cors__AllowedOrigin
   - `409` conflict, e.g. duplicate or still in use
 - **PATCH** works like this: omitted or `null` fields are left unchanged.
 - **Create** returns `201` with the created object. **Delete** returns `204`.
+- **Events** have a `scope` (`Team`, `Department`, `CompanyWide`; default `Team`) and an optional exact `budgetAmount` (money). `budgetBand` is kept. Responses also include `createdByName`.
 
 ## Permissions (shown in each operation's summary)
 

@@ -107,6 +107,7 @@ public static class EventEndpoints
             .Required(request.Title, "title", 250)
             .Required(request.Location, "location", 250)
             .MaxLength(request.BudgetBand, "budgetBand", 120)
+            .Check(request.BudgetAmount is null || IsValidBudget(request.BudgetAmount.Value), "budgetAmount", BudgetAmountMessage)
             .Check(request.EventDate != default, "eventDate", "This field is required.")
             .Check(request.EndDate is null || request.EndDate >= request.EventDate, "endDate", "Must not be before eventDate.")
             .Check(request.GuestCountEstimate is null or >= 0, "guestCountEstimate", "Must be zero or more.");
@@ -129,7 +130,9 @@ public static class EventEndpoints
             EventDate = request.EventDate,
             EndDate = request.EndDate,
             Location = request.Location.Trim(),
+            Scope = request.Scope ?? EventScope.Team,
             GuestCountEstimate = request.GuestCountEstimate,
+            BudgetAmount = request.BudgetAmount,
             BudgetBand = Clean(request.BudgetBand),
             StyleNotes = Clean(request.StyleNotes),
             Status = request.Status ?? EventStatus.Draft,
@@ -168,6 +171,7 @@ public static class EventEndpoints
             .NotBlankIfProvided(request.Title, "title", 250)
             .NotBlankIfProvided(request.Location, "location", 250)
             .MaxLength(request.BudgetBand, "budgetBand", 120)
+            .Check(request.BudgetAmount is null || IsValidBudget(request.BudgetAmount.Value), "budgetAmount", BudgetAmountMessage)
             .Check(request.GuestCountEstimate is null or >= 0, "guestCountEstimate", "Must be zero or more.")
             .ThrowIfInvalid();
 
@@ -183,7 +187,9 @@ public static class EventEndpoints
         evt.EndDate = endDate;
         if (request.Title is not null) evt.Title = request.Title.Trim();
         if (request.Location is not null) evt.Location = request.Location.Trim();
+        if (request.Scope is not null) evt.Scope = request.Scope.Value;
         if (request.GuestCountEstimate is not null) evt.GuestCountEstimate = request.GuestCountEstimate;
+        if (request.BudgetAmount is not null) evt.BudgetAmount = request.BudgetAmount;
         if (request.BudgetBand is not null) evt.BudgetBand = Clean(request.BudgetBand);
         if (request.StyleNotes is not null) evt.StyleNotes = Clean(request.StyleNotes);
         if (request.Status is not null) evt.Status = request.Status.Value;
@@ -284,7 +290,9 @@ public static class EventEndpoints
             e.EndDate,
             e.Location,
             e.Status,
+            e.Scope,
             e.GuestCountEstimate,
+            e.BudgetAmount,
             e.BudgetBand,
             e.StyleNotes,
             e.IsShared,
@@ -294,7 +302,13 @@ public static class EventEndpoints
                 .Select(et => new EventTeamResponse(et.TeamId, et.Team.Name, et.IsOwningTeam))
                 .ToList(),
             e.CreatedBy,
+            e.CreatedByUser.Name,
             e.CreatedAt));
+
+    private const string BudgetAmountMessage = "Must be between 0 and 9,999,999,999.99 with at most 2 decimal places.";
+
+    private static bool IsValidBudget(decimal amount) =>
+        amount >= 0 && amount < 10_000_000_000m && decimal.Round(amount, 2) == amount;
 
     private static async Task<EventResponse> LoadAsync(EventPlugDbContext db, Guid eventId) =>
         await Project(db.Events.AsNoTracking().Where(e => e.Id == eventId)).SingleOrDefaultAsync()

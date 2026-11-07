@@ -12,6 +12,8 @@ public class Event : ITenantScoped
     public string Location { get; set; } = string.Empty;
     public int? GuestCountEstimate { get; set; }
     public string? BudgetBand { get; set; }
+    public decimal? BudgetAmount { get; set; }
+    public EventScope Scope { get; set; } = EventScope.Team;
     public string? StyleNotes { get; set; }
     public EventStatus Status { get; set; }
     public bool IsShared { get; set; }
